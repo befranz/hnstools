@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # mynames - get all owned names of a wallet ($1)
-# version 1.00
+# version 1.01
+
+HNS_WID="$1"
 
 # Default and private settings (API and PW for wallet)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -17,8 +19,6 @@ else
   echo "Config file ${MYNAMES_CFG} missing!"
   exit
 fi
-
-HNS_WID="$1"
 
 HNS_NURL="http://x:${HNS_API}@${HNS_IP}:${HNS_NPORT}"
 HNS_WURL="http://x:${HNS_API}@${HNS_IP}:${HNS_WPORT}"
