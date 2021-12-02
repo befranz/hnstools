@@ -11,15 +11,20 @@ The following components need to be installed
 * Handshake hs-client (https://github.com/handshake-org/hs-client)
 * curl, jq, idn2
 
-## mynames
+## Tool 1: mynames
 Creates a list of all names a specific wallet is holding.
 
-### Installation
+### Installation / Update
 ```
 cd
 git clone https://github.com/befranz/hnstools.git
 cp hnstools/hnstools.cfg ~/hnstools.cfg
 nano ~/hnstools.cfg      # and adjust your Config File (see below)
+```
+To update this repository
+```
+cd ~/hnstools
+git pull
 ```
 
 ### Config File ~/hnstools.cfg
@@ -41,3 +46,4 @@ HNS_WPORT="12039"
 It creates CSV file **~/hnstools/\<Wallet Name\>-mynames.csv** with following data:
 WALLET,OPEN,CURRENT,EXPIRE,LASTACTION,NAME,PRICE,SYMBOL,STATUS,REGISTERED
 
+The list contains not only registered names but also revealed names which are currently owned by this wallet. Ownership may change if a higher bid was revealed after the list was created.
