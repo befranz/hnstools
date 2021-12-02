@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+# mynames - get all owned names of a wallet ($1)
+# version 1.00
+
+# Default and private settings (API and PW for wallet)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+OUTPUTFILE="${DIR}/${HNS_WID}-mynames.csv"
+
+TMPFILE=$(mktemp)
+trap "rm -f $TMPFILE" EXIT
+
+MYNAMES_CFG="${HOME}/hnstools.cfg"
+if [ -f "${MYNAMES_CFG}" ]; then
+  source "${MYNAMES_CFG}"
+else
+  echo "Config file ${MYNAMES_CFG} missing!"
+  exit
+fi
+
+HNS_WID="$1"
+
+HNS_NURL="http://x:${HNS_API}@${HNS_IP}:${HNS_NPORT}"
+HNS_WURL="http://x:${HNS_API}@${HNS_IP}:${HNS_WPORT}"
+
+function hnsmynames {
+  hsw-rpc --api-key=${HNS_API} selectwallet ${HNS_WID} >/dev/null
+  hsw-rpc --api-key=${HNS_API} getnames |\
+    jq -r '.[]|(.height|tostring)+" "+.name+" "+.owner.hash+"/"+(.owner.index|tostring)+" "+
+    (.stats.renewalPeriodEnd|tostring)+" "+.state+" "+(.registered|tostring)' |\
+    sort -nk4 >"$TMPFILE"
+  echo "WALLET,OPEN,CURRENT,EXPIRE,LASTACTION,NAME,PRICE,SYMBOL,STATUS,REGISTERED"
+  while read LINE ; do
+    line=($LINE)
+    HSWTXIX="${line[2]}"
+    ZEROADDR=${HSWTXIX:10:20}
+    if [ "$ZEROADDR" != "00000000000000000000" ]; then
+      HNS_BACK=$(curl -s "${HNS_WURL}/wallet/${HNS_WID}/coin/$HSWTXIX")
+      ACTION=$(echo ${HNS_BACK}|jq -r ".covenant.action")
+      if [ "$ACTION" != "" ]; then
+        NAMOPEN="${line[0]}"
+        HSWNAME="${line[1]}"
+        NAMVAL=$(echo ${HNS_BACK}|jq -r ".value")
+        HSWEXPI="${line[3]}"
+        STATUS="${line[4]}"
+        REGISTERED="${line[5]}"
+        [ "${HSWNAME:0:4}" = "xn--" ] && UNI=$(idn2 -d $HSWNAME) || UNI=""
+        NAMVAL=$(awk "BEGIN {printf \"%.2f\n\", $NAMVAL*0.000001}")
+        echo "${HNS_WID},$NAMOPEN,$BLOCK,$HSWEXPI,$ACTION,$HSWNAME,${NAMVAL},$UNI,$STATUS,$REGISTERED"
+      fi
+    fi
+  done < "$TMPFILE"
+}
+
+# Main Start
+
+if [ -z "$1" ]; then
+    echo "Please supply your wallet name as parameter."
+    exit 1
+fi
+
+
+HNS_BACK=$(curl -s ${HNS_NURL})
+ERROR=$(echo "${HNS_BACK}"|jq -r ".error.message")
+if [ "$ERROR" = "null" ]; then
+  BLOCK=$(echo "${HNS_BACK}"|jq '.chain.height')
+else
+  echo "$ERROR"
+  exit 1
+fi
+
+hnsmynames|tee "${OUTPUTFILE}.txt"
+mv -f "${OUTPUTFILE}.txt" "${OUTPUTFILE}"
+
+exit 0
