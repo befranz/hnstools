@@ -29,11 +29,11 @@ git pull
 
 ### Config File ~/hnstools.cfg
 
-Create a file with a text editor in your home directory called **hnstools.cfg**. Set **API-Key** and **password** for hsd / Bob Wallet. If the full node runs on same machine you usually don't change anything else. Otherwise you probably know what to change. This config file will also be used for other tools which might come in the future.
+Create a file with a text editor in your home directory called **hnstools.cfg**. Set **API-Key** for hsd / Bob Wallet. **Password** is currently optional and not needed to only read the wallet. If the full node runs on same machine you usually don't change anything else. Otherwise you probably know what to change. This config file will also be used for other tools which might come in the future.
 
 ```
 HNS_API="<Your API-Key>"
-HNS_PW="<Your Password>"
+HNS_PW="<Your Password>" # not necessary for mynames
 
 HNS_IP="127.0.0.1"
 HNS_NPORT="12037"
